@@ -4,12 +4,12 @@ O objetivo dessas apresentações é tornar mais acessivel o conhecimento de Dev
 
 # Arquivos
 
+ - DevSecOps para Leigos.html  -> Versão com acessibilidade!
  - DevSecOps para leigos V1.pptx
  - DevSecOps para leigos V2.pptx
+ - DevSecOps para leigos V3.pdf
+ - LICENSE
  - README.md 
- 
-PRs são bem-vindas:
-*Torne-se um contribuidor.*
 
 ## Licença
 
