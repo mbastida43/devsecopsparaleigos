@@ -84,6 +84,16 @@
         .explain-fab { position: fixed; background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(16,185,129,0.4); z-index: 1001; transition: transform 0.2s; display: none; }
         .explain-fab:hover { transform: scale(1.05); }
 
+        /* Painel de configuração da chave API */
+        .key-panel { padding: 16px 20px; background: #fffbeb; border-bottom: 1px solid #fde68a; display: none; }
+        .key-panel p { font-size: 13px; color: #92400e; margin: 0 0 10px; line-height: 1.5; }
+        .key-panel input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 8px; font-family: monospace; box-sizing: border-box; }
+        .key-panel input:focus { border-color: #4f46e5; }
+        .key-panel .key-save-btn { width: 100%; background: #4f46e5; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+        .key-panel .key-save-btn:hover { background: #4338ca; }
+        .key-change-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+        .key-change-btn:hover { background: rgba(255,255,255,0.35); }
+
     </style>
 </head>
 <body>
@@ -106,11 +116,12 @@
             </p>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 2" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 2" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-intro">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide 3, O que é DevSecOps em detalhe. O ecrã está dividido em duas colunas: à esquerda a definição e à direita as 8 fases do ciclo.</span>
         <h2 class="slide-title">O que é DevSecOps?</h2>
         <div class="two-column">
             <div class="highlight-box">
@@ -133,7 +144,7 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 3" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 3" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
             <button type="button" class="action-btn" aria-label="Slide 3: Gerar analogia visual do ciclo DevSecOps — áudio e texto disponíveis" onclick="gerarAnalogiaVisual('Um símbolo do infinito contínuo unindo três engrenagens de cores vibrantes, simbolizando a união perfeita de desenvolvimento, operações e segurança, 3d render clean.')"><span aria-hidden="true">🎨</span> Imagem Analógica (IA)</button>
         </div>
     </section>
@@ -166,7 +177,7 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 4" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 4" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
@@ -190,7 +201,7 @@
         </div>
         
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 5" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 5" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
             <button type="button" class="action-btn" aria-label="Slide 5: Gerar analogia visual da fase de Desenvolvimento — áudio e texto disponíveis" onclick="gerarAnalogiaVisual('Um programador a construir um escudo cibernético neon usando blocos de montar tipo Lego, estilo 3D isométrico cartoon e vibrante.')"><span aria-hidden="true">🎨</span> Imagem Analógica (IA)</button>
         </div>
     </section>
@@ -213,7 +224,7 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 6" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 6" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
             <button type="button" class="action-btn" aria-label="Slide 6: Gerar analogia visual dos IDEs — áudio e texto disponíveis" onclick="gerarAnalogiaVisual('Uma oficina mecânica moderna e tecnológica, de alta tecnologia e luzes neon, focada em construir aplicações de computador seguras, arte conceptual sci-fi.')"><span aria-hidden="true">🎨</span> Imagem Analógica (IA)</button>
         </div>
     </section>
@@ -237,7 +248,7 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 7" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 7" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
             <button type="button" class="action-btn" aria-label="Slide 7: Gerar analogia visual dos Repositórios — áudio e texto disponíveis" onclick="gerarAnalogiaVisual('Uma máquina do tempo futurista e brilhante a guardar pergaminhos digitais numa biblioteca cibernética voadora, arte digital linda e iluminada.')"><span aria-hidden="true">🎨</span> Imagem Analógica (IA)</button>
         </div>
     </section>
@@ -260,12 +271,13 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 8" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 8" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
             <button type="button" class="action-btn" aria-label="Slide 8: Gerar analogia visual da segurança Snyk — áudio e texto disponíveis" onclick="gerarAnalogiaVisual('Um cão Doberman simpático e robótico a analisar peças de encaixe tipo lego em busca de vírus, com um escudo holográfico, ilustração 3D limpa.')"><span aria-hidden="true">🎨</span> Imagem Analógica (IA)</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase3">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 3, Construção. Aborda a automatização da compilação e as ferramentas Maven, Gradle, SonarQube, Scout e Trivy.</span>
         <h2 class="slide-title">Fase 3: Construção (Build)</h2>
         <p>A magia da automatização acontece aqui: transformando o código-fonte legível por humanos em pacotes executáveis de software de forma limpa, auditável e reprodutível.</p>
         
@@ -285,11 +297,12 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 9" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 9" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase4">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 4, Teste. Aborda testes automatizados com as ferramentas JUnit, Selenium e Playwright.</span>
         <h2 class="slide-title">Fase 4: Teste (Test)</h2>
         <div class="highlight-box" style="margin-bottom: 30px;">
             <p>Garante que os novos recursos funcionem sem quebrar o sistema. A <strong>Verificação de Segurança</strong> aqui é obrigatória, pois achar falhas nesta etapa é muito mais barato do que em produção.</p>
@@ -311,11 +324,12 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 10" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 10" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase5">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 5, Liberação. Aborda integração e entrega contínuas, com os motores CI/CD: GitLab CI, GitHub Actions e Jenkins.</span>
         <h2 class="slide-title">Fase 5: Liberação (Release)</h2>
         <div class="two-column">
             <div>
@@ -341,11 +355,12 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 11" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 11" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase6">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 6, Implantação. Aborda infraestrutura como código com provedores de nuvem, Terraform, Chef e Puppet.</span>
         <h2 class="slide-title">Fase 6: Implantação (Deploy)</h2>
         <p>Aceleração controlada. Provisionando servidores em segundos e distribuindo a aplicação validada para o público final sem causar indisponibilidades operacionais.</p>
         
@@ -365,11 +380,12 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 12" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 12" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase7">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 7, Operação. Aborda observabilidade em produção com as ferramentas Splunk, Datadog, Prometheus e Grafana.</span>
         <h2 class="slide-title">Fase 7: Operação (Operate)</h2>
         <div class="two-column">
             <div>
@@ -394,11 +410,12 @@
             </div>
         </div>
         <div class="slide-actions">
-            <button type="button" class="action-btn" aria-label="Ouvir Slide 13" aria-live="polite" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 13" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
         </div>
     </section>
 
     <section class="slide-container" id="slide-fase8">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide da Fase 8, Monitorização. Explica como as anomalias detetadas retornam à Fase 1 para melhorar o ciclo continuamente.</span>
         <h2 class="slide-title">Fase 8: Monitorização (Monitor)</h2>
         <div style="display: flex; flex-direction: column; justify-content: center; flex: 1;">
             <div class="highlight-box">
@@ -407,15 +424,20 @@
             </div>
             <p>Toda a inteligência e anomalias recolhidas não param aqui: <strong>elas retornam à Fase 1 (Planeamento)</strong>, ensinando a equipa a construir um sistema blindado na próxima iteração do ciclo.</p>
         </div>
+        <div class="slide-actions">
+            <button type="button" class="action-btn" aria-label="Ouvir Slide 14" onclick="narrarSlide(this)"><span aria-hidden="true">🔊</span> Ouvir Slide</button>
+        </div>
     </section>
 
     <section class="slide-container cover-slide" id="slide-citacao">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide de citação do autor Steve Suehring sobre a cultura DevSecOps.</span>
         <blockquote class="quote-text" style="font-size: 32px; border-left: 12px solid #10b981; padding-left: 40px; margin: auto 0; text-align: left; max-width: 1000px;">
             "O DevSecOps foca na construção de processos repetíveis e abertos para criar uma cultura. A tecnologia deve ajudar a concluir o trabalho, mas a ferramenta não define o trabalho."
         </blockquote>
     </section>
 
     <section class="slide-container cover-slide" id="slide-final">
+        <span class="sr-only">Atenção utilizador de leitor de ecrã: Este é o slide final. Obrigado pela leitura. Apresentação produzida por Marlon Bastida.</span>
         <h1 style="font-size: 72px; color: #4f46e5; margin-bottom: 20px;">Obrigado pela Leitura!</h1>
         <h3 style="margin-top: 0; color: #1e293b; font-size: 26px;">Produzido por: Marlon Bastida</h3>
     </section>
@@ -460,8 +482,14 @@
         <div style="display: flex; gap: 5px;">
             <button type="button" class="summary-btn" onclick="gerarResumoExecutivo()" title="Resumo Executivo em Tópicos">📋 Resumo</button>
             <button type="button" class="quiz-btn" onclick="gerarQuiz()" title="Testar conhecimento">📝 Quiz</button>
+            <button type="button" class="key-change-btn" onclick="mostrarPainelChave()" title="Alterar chave API" aria-label="Alterar chave da API">🔑</button>
             <button type="button" class="close-chat" onclick="toggleChat()" aria-label="Fechar chat">×</button>
         </div>
+    </div>
+    <div class="key-panel" id="key-panel" role="region" aria-label="Configuração da chave API">
+        <p>Para usar o Mentor IA insira a sua chave da API Anthropic. Ela fica guardada <strong>apenas no seu browser</strong> (localStorage) e nunca é enviada a terceiros.</p>
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." aria-label="Chave da API Anthropic" onkeypress="if(event.key==='Enter') salvarChaveAPI()">
+        <button type="button" class="key-save-btn" onclick="salvarChaveAPI()">Guardar e Continuar</button>
     </div>
     <div class="chat-messages" id="chat-messages" aria-live="polite">
         <div class="msg bot">Olá! Sou o Mentor IA. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
@@ -486,12 +514,47 @@
     let textoSelecionadoGlobal = "";
     let ultimoBotaoAnalogiaAtivado = null;
 
+    // ─── Gestão da chave API (guardada em localStorage) ─────────────────────────
+    const KEY_STORAGE = 'anthropic_api_key';
+
+    function getChaveAPI() {
+        return localStorage.getItem(KEY_STORAGE) || '';
+    }
+
+    function salvarChaveAPI() {
+        const keyInput = document.getElementById('api-key-input');
+        const key = keyInput.value.trim();
+        if (!key) return;
+        localStorage.setItem(KEY_STORAGE, key);
+        keyInput.value = '';
+        document.getElementById('key-panel').style.display = 'none';
+        addMessageToUI('✅ Chave guardada! Pode agora fazer as suas perguntas.', 'bot');
+        userInput.focus();
+    }
+
+    function mostrarPainelChave() {
+        const kp = document.getElementById('key-panel');
+        kp.style.display = kp.style.display === 'none' || kp.style.display === '' ? 'block' : 'none';
+        if (kp.style.display === 'block') document.getElementById('api-key-input').focus();
+    }
+
+    function verificarChaveAPI() {
+        if (!getChaveAPI()) {
+            document.getElementById('key-panel').style.display = 'block';
+            setTimeout(() => document.getElementById('api-key-input').focus(), 50);
+        }
+    }
+
     function toggleChat() {
         chatPanel.classList.toggle('active');
         const isActive = chatPanel.classList.contains('active');
         chatPanel.setAttribute('aria-hidden', !isActive);
         if (isActive) {
-            userInput.focus();
+            if (!getChaveAPI()) {
+                verificarChaveAPI();
+            } else {
+                userInput.focus();
+            }
         }
     }
 
@@ -516,6 +579,13 @@
 
     // ─── Cliente da API Anthropic (Claude) ──────────────────────────────────────
     async function callClaudeAPI(messages, systemPrompt = null, retryCount = 0) {
+        const apiKey = getChaveAPI();
+        if (!apiKey) {
+            document.getElementById('key-panel').style.display = 'block';
+            setTimeout(() => document.getElementById('api-key-input').focus(), 50);
+            throw new Error('Chave API não configurada');
+        }
+
         const body = {
             model: "claude-sonnet-4-6",
             max_tokens: 1000,
@@ -528,13 +598,20 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-api-key": apiKey,
+                    "anthropic-version": "2023-06-01",
                     "anthropic-dangerous-direct-browser-access": "true"
                 },
                 body: JSON.stringify(body)
             });
 
             if (!response.ok) {
-                if ((response.status === 429 || response.status >= 500) && retryCount < 5) {
+                if (response.status === 401) {
+                    localStorage.removeItem(KEY_STORAGE);
+                    document.getElementById('key-panel').style.display = 'block';
+                    throw new Error('Chave API inválida');
+                }
+                if ((response.status === 429 || response.status >= 500) && retryCount < 3) {
                     const delay = Math.pow(2, retryCount) * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                     return callClaudeAPI(messages, systemPrompt, retryCount + 1);
@@ -543,7 +620,7 @@
             }
             return await response.json();
         } catch (error) {
-            if (retryCount < 5) {
+            if (retryCount < 3 && !error.message.includes('inválida') && !error.message.includes('configurada')) {
                 const delay = Math.pow(2, retryCount) * 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return callClaudeAPI(messages, systemPrompt, retryCount + 1);
@@ -578,7 +655,13 @@
             }
         } catch (error) {
             console.error("Erro na API Claude:", error);
-            addMessageToUI("Aconteceu um problema de ligação com a rede. Tente enviar a sua dúvida novamente em alguns segundos.", 'bot');
+            if (error.message.includes('configurada')) {
+                addMessageToUI("⚠️ Insira a sua chave da API Anthropic no painel amarelo acima para usar o Mentor IA.", 'bot');
+            } else if (error.message.includes('inválida')) {
+                addMessageToUI("❌ Chave da API inválida. Por favor, insira uma chave válida no painel acima.", 'bot');
+            } else {
+                addMessageToUI("Aconteceu um problema de ligação com a rede. Tente enviar a sua dúvida novamente em alguns segundos.", 'bot');
+            }
         } finally {
             typingIndicator.style.display = 'none';
             userInput.disabled = false;
@@ -656,11 +739,6 @@
         utterance.pitch   = 1.05;
         utterance.volume  = 1;
 
-        // Tenta usar uma voz em português, se disponível
-        const voices = window.speechSynthesis.getVoices();
-        const ptVoice = voices.find(v => v.lang.startsWith('pt'));
-        if (ptVoice) utterance.voice = ptVoice;
-
         btn.innerHTML = "<span aria-hidden='true'>🔊</span> A Falar...";
         btn.setAttribute('aria-label', 'A ler o slide em voz alta. Clique para parar.');
 
@@ -673,6 +751,7 @@
         utterance.onerror = (e) => {
             if (e.error === 'interrupted') return; // silencioso quando o utilizador pára
             console.error('SpeechSynthesis error:', e);
+            btn.classList.remove('playing');
             btn.innerHTML = "<span aria-hidden='true'>❌</span> Erro de áudio";
             setTimeout(() => {
                 btn.innerHTML = originalHtml;
@@ -681,7 +760,23 @@
             }, 2000);
         };
 
-        window.speechSynthesis.speak(utterance);
+        // Chrome/Edge: getVoices() retorna [] na primeira chamada — aguardar voiceschanged
+        function doSpeak() {
+            const voices  = window.speechSynthesis.getVoices();
+            const ptVoice = voices.find(v => v.lang.startsWith('pt'));
+            if (ptVoice) utterance.voice = ptVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            doSpeak();
+        } else {
+            window.speechSynthesis.addEventListener('voiceschanged', function onVC() {
+                window.speechSynthesis.removeEventListener('voiceschanged', onVC);
+                doSpeak();
+            });
+        }
     }
 
     // ─── Função principal do botão "Ouvir Slide" (usa Web Speech API nativa) ──
@@ -691,12 +786,15 @@
             window.speechSynthesis.cancel();
             btn.classList.remove('playing');
             btn.innerHTML = "<span aria-hidden='true'>🔊</span> Ouvir Slide";
-            btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Parar', 'Ouvir'));
+            const savedLabel = btn.dataset.originalAriaLabel;
+            if (savedLabel) btn.setAttribute('aria-label', savedLabel);
             return;
         }
 
         const originalHtml      = btn.innerHTML;
         const originalAriaLabel = btn.getAttribute('aria-label');
+        // Guarda o label original no dataset para restaurar correctamente ao parar
+        btn.dataset.originalAriaLabel = originalAriaLabel;
 
         // Extrai o texto directamente do DOM do slide actual
         const section   = btn.closest('.slide-container');
@@ -773,10 +871,23 @@
             utt.rate    = 0.9;
             utt.pitch   = 1.05;
             utt.volume  = 1;
-            const voices  = window.speechSynthesis.getVoices();
-            const ptVoice = voices.find(v => v.lang.startsWith('pt'));
-            if (ptVoice) utt.voice = ptVoice;
-            window.speechSynthesis.speak(utt);
+
+            function doSpeakModal() {
+                const voices  = window.speechSynthesis.getVoices();
+                const ptVoice = voices.find(v => v.lang.startsWith('pt'));
+                if (ptVoice) utt.voice = ptVoice;
+                window.speechSynthesis.speak(utt);
+            }
+
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                doSpeakModal();
+            } else {
+                window.speechSynthesis.addEventListener('voiceschanged', function onVC() {
+                    window.speechSynthesis.removeEventListener('voiceschanged', onVC);
+                    doSpeakModal();
+                });
+            }
         }
     }
 
