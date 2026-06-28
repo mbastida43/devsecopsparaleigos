@@ -83,6 +83,9 @@
 
         .explain-fab { position: fixed; background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(16,185,129,0.4); z-index: 1001; transition: transform 0.2s; display: none; }
         .explain-fab:hover { transform: scale(1.05); }
+        .auto-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: bold; transition: background 0.2s; }
+        .auto-btn:hover { background: rgba(255,255,255,0.35); }
+        .auto-btn.playing { background: #10b981; border-color: #10b981; }
 
 
     </style>
@@ -473,6 +476,7 @@
         <div style="display: flex; gap: 5px;">
             <button type="button" class="summary-btn" onclick="gerarResumoExecutivo()" title="Resumo Executivo em Tópicos">📋 Resumo</button>
             <button type="button" class="quiz-btn" onclick="gerarQuiz()" title="Testar conhecimento">📝 Quiz</button>
+            <button type="button" class="auto-btn" id="auto-explain-btn" onclick="toggleAutoExplain()" title="Ativar auto-explicação por IA ao rolar os slides">🤖 Auto IA</button>
             <button type="button" class="close-chat" onclick="toggleChat()" aria-label="Fechar chat">×</button>
         </div>
     </div>
@@ -726,6 +730,65 @@
         useSpeechSynthesis(btn, slideText, originalHtml, originalAriaLabel);
     }
 
+    // ─── Utilitário: fala um texto com Web Speech API sem gerir estado de botão ──
+    function falarTexto(texto) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(texto);
+        utt.lang = 'pt-BR'; utt.rate = 0.92; utt.pitch = 1.05; utt.volume = 1;
+        function doSpeak() {
+            const voices = window.speechSynthesis.getVoices();
+            const ptVoice = voices.find(v => v.lang.startsWith('pt'));
+            if (ptVoice) utt.voice = ptVoice;
+            window.speechSynthesis.speak(utt);
+        }
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) doSpeak();
+        else window.speechSynthesis.addEventListener('voiceschanged', function onVC() {
+            window.speechSynthesis.removeEventListener('voiceschanged', onVC);
+            doSpeak();
+        });
+    }
+
+    // ─── 1. NARRAÇÃO INTELIGENTE COM GEMMA ────────────────────────────────────
+    async function narrarComIA(btn) {
+        if (btn.classList.contains('playing')) {
+            window.speechSynthesis.cancel();
+            btn.classList.remove('playing');
+            btn.innerHTML = "<span aria-hidden='true'>🤖</span> Narrar com IA";
+            const saved = btn.dataset.originalAriaLabel;
+            if (saved) btn.setAttribute('aria-label', saved);
+            return;
+        }
+        const section = btn.closest('.slide-container');
+        const slideText = section ? getSlideText(section) : '';
+        if (!slideText) return;
+
+        const originalHtml = btn.innerHTML;
+        const originalAriaLabel = btn.getAttribute('aria-label');
+        btn.dataset.originalAriaLabel = originalAriaLabel;
+        btn.innerHTML = "<span aria-hidden='true'>🤖</span> Pensando...";
+        btn.disabled = true;
+
+        try {
+            const prompt = `Voce e um educador. Explique o seguinte conteudo de slide sobre DevSecOps de forma amigavel em 3 frases curtas em Portugues do Brasil para um iniciante. Nao repita o titulo: ${slideText.slice(0, 600)}`;
+            const data = await callOllamaAPI([{ role: 'user', content: prompt }]);
+            const explanation = data?.message?.content;
+            if (explanation) {
+                btn.disabled = false;
+                btn.classList.add('playing');
+                useSpeechSynthesis(btn, explanation, originalHtml, originalAriaLabel);
+            } else {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            console.error('narrarComIA:', e);
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+
     // ─── Remove termos técnicos de geração de imagem, deixando apenas a descrição em PT ───
     function limparPromptParaDescricao(prompt) {
         return prompt
@@ -747,82 +810,68 @@
     }
 
     // ─── Gera analogia visual com descrição em texto e áudio (Web Speech API) ──
-    function gerarAnalogiaVisual(prompt, retryCount = 0) {
-        const modal        = document.getElementById('image-modal');
-        const imgEl        = document.getElementById('generated-image');
-        const titleEl      = document.getElementById('image-modal-title');
-        const textDescEl   = document.getElementById('modal-text-desc');
+    // ─── 2. ANALOGIA GERADA PELO GEMMA ────────────────────────────────────────
+    async function gerarAnalogiaVisual(prompt) {
+        const modal      = document.getElementById('image-modal');
+        const imgEl      = document.getElementById('generated-image');
+        const titleEl    = document.getElementById('image-modal-title');
+        const textDescEl = document.getElementById('modal-text-desc');
         const modalContent = modal.querySelector('.modal-content');
 
-        // Guarda o botão activo para devolver o foco ao fechar (apenas na primeira chamada)
-        if (retryCount === 0) {
-            ultimoBotaoAnalogiaAtivado = document.activeElement;
-        }
-
-        // Deriva a descrição legível a partir do prompt de geração de imagem
-        const descricao = limparPromptParaDescricao(prompt);
-
-        // Abre o modal e torna-o visível para leitores de ecrã
-        modal.style.display   = 'grid';
+        ultimoBotaoAnalogiaAtivado = document.activeElement;
+        modal.style.display = 'grid';
         modal.setAttribute('aria-hidden', 'false');
         textDescEl.style.display = 'none';
-        textDescEl.textContent   = '';
+        textDescEl.textContent = '';
         imgEl.alt = '';
-
-        // Modo de Descrição em Texto e Áudio (sem dependência de API externa)
-        titleEl.textContent      = '🎨 Analogia Visual — Descrição em Áudio';
-        imgEl.src                = 'https://placehold.co/600x400/e0f2fe/4f46e5?text=%F0%9F%94%8A+Descri%C3%A7%C3%A3o+em+%C3%81udio';
-        imgEl.alt                = descricao;
-        textDescEl.textContent   = descricao;
-        textDescEl.style.display = 'block';
-
-        // Move foco para o conteúdo do modal para que NVDA anuncie o diálogo
+        titleEl.textContent = '🤖 Gemma gerando analogia...';
+        imgEl.src = 'https://placehold.co/600x400/e0f2fe/4f46e5?text=Gemma+pensando...';
         modalContent.focus();
 
-        // Lê a descrição em voz alta com a API nativa do browser
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utt   = new SpeechSynthesisUtterance('Analogia visual para este slide: ' + descricao);
-            utt.lang    = 'pt-BR';
-            utt.rate    = 0.9;
-            utt.pitch   = 1.05;
-            utt.volume  = 1;
+        const conceito = limparPromptParaDescricao(prompt);
 
-            function doSpeakModal() {
-                const voices  = window.speechSynthesis.getVoices();
-                const ptVoice = voices.find(v => v.lang.startsWith('pt'));
-                if (ptVoice) utt.voice = ptVoice;
-                window.speechSynthesis.speak(utt);
-            }
-
-            const voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                doSpeakModal();
+        try {
+            const pergunta = `Crie uma analogia criativa e simples do dia a dia para explicar este conceito de DevSecOps para um iniciante, em Portugues do Brasil, em no maximo 2 frases: "${conceito}"`;
+            const data = await callOllamaAPI([{ role: 'user', content: pergunta }]);
+            const analogy = data?.message?.content?.trim();
+            if (analogy) {
+                titleEl.textContent = '🤖 Analogia gerada pelo Gemma';
+                textDescEl.textContent = analogy;
+                textDescEl.style.display = 'block';
+                imgEl.alt = analogy;
+                imgEl.src = 'https://placehold.co/600x400/f0fdf4/10b981?text=Analogia+por+Gemma';
+                falarTexto(analogy);
             } else {
-                window.speechSynthesis.addEventListener('voiceschanged', function onVC() {
-                    window.speechSynthesis.removeEventListener('voiceschanged', onVC);
-                    doSpeakModal();
-                });
+                titleEl.textContent = '❌ Erro ao gerar analogia';
             }
+        } catch (e) {
+            console.error('gerarAnalogiaVisual:', e);
+            titleEl.textContent = '❌ Gemma nao respondeu';
+            textDescEl.textContent = 'Verifique se o Ollama esta rodando.';
+            textDescEl.style.display = 'block';
         }
     }
 
     async function gerarQuiz() {
         if (!chatPanel.classList.contains('active')) toggleChat();
         
+        // ─── 4. QUIZ ADAPTATIVO — usa histórico de respostas para ajustar nível ───
         const quizBtn = document.querySelector('.quiz-btn');
         const originalBtnText = quizBtn.innerText;
         quizBtn.innerText = "⏳ A Gerar...";
         quizBtn.disabled = true;
-        
-        addMessageToUI("⏳ O Mentor está a criar um desafio relâmpago para si...", "bot");
-        
-        // Instrui o Claude a devolver APENAS JSON válido, sem markdown
+
+        const difficulty = getQuizDifficulty();
+        const perfMsg = quizStats.total > 0
+            ? ` (nível: ${difficulty} — ${quizStats.correct}/${quizStats.total} corretas)`
+            : '';
+        addMessageToUI(`⏳ O Mentor está a criar um desafio${perfMsg}...`, "bot");
+
         const systemPromptQuiz = `Responda APENAS com JSON valido, sem markdown. Formato obrigatorio: {"pergunta":"texto","opcoes":["A","B","C","D"],"indiceCorreta":0,"explicacao":"texto"}. Use Portugues do Brasil.`;
 
         const messages = [{
             role: "user",
-            content: "Gere uma pergunta de múltipla escolha para iniciantes sobre DevSecOps, IDEs ou repositórios (Git/GitHub) em português de Portugal baseada na aula."
+            content: `Gere uma pergunta de multipla escolha de nivel ${difficulty} sobre DevSecOps, IDEs ou repositorios (Git/GitHub) em Portugues do Brasil.`
         }];
 
         try {
@@ -843,38 +892,40 @@
     function renderQuizUI(quizData) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('msg', 'bot');
-        
+
         const titleEl = document.createElement('div');
         titleEl.classList.add('markdown-bold');
         titleEl.innerText = quizData.pergunta;
         msgDiv.appendChild(titleEl);
-        
+
         const container = document.createElement('div');
         container.classList.add('quiz-container');
         msgDiv.appendChild(container);
-        
+
         let respondido = false;
-        
+
         quizData.opcoes.forEach((opcao, index) => {
             const btn = document.createElement('button');
             btn.classList.add('quiz-option');
             btn.innerText = opcao;
             btn.onclick = () => {
-                if(respondido) return;
+                if (respondido) return;
                 respondido = true;
-                
+                quizStats.total++;
+
                 if (index === quizData.indiceCorreta) {
+                    quizStats.correct++;
                     btn.classList.add('correct');
-                    addMessageToUI(`✅ **Excelente!** ${quizData.explicacao}`, "bot");
+                    addMessageToUI(`✅ **Excelente!** ${quizData.explicacao}\n\n_Acertos: ${quizStats.correct}/${quizStats.total}_`, "bot");
                 } else {
                     btn.classList.add('wrong');
                     container.children[quizData.indiceCorreta].classList.add('correct');
-                    addMessageToUI(`❌ **Quase lá.** A resposta certa era a número ${quizData.indiceCorreta + 1}. \n\n${quizData.explicacao}`, "bot");
+                    addMessageToUI(`❌ **Quase lá.** A resposta certa era a número ${quizData.indiceCorreta + 1}.\n\n${quizData.explicacao}\n\n_Acertos: ${quizStats.correct}/${quizStats.total}_`, "bot");
                 }
             };
             container.appendChild(btn);
         });
-        
+
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -969,9 +1020,72 @@
     explainFab.addEventListener('click', () => {
         explainFab.style.display = 'none';
         if (!chatPanel.classList.contains('active')) toggleChat();
-        
+
         userInput.value = `O que significa "${textoSelecionadoGlobal}"?`;
         sendMessage();
+    });
+
+    // ─── Variáveis globais do quiz adaptativo ─────────────────────────────────
+    let quizStats = { correct: 0, total: 0 };
+    function getQuizDifficulty() {
+        if (quizStats.total === 0) return 'basico para iniciante';
+        const ratio = quizStats.correct / quizStats.total;
+        if (ratio >= 0.8) return 'avancado com conceitos tecnicos';
+        if (ratio >= 0.5) return 'intermediario';
+        return 'basico para iniciante';
+    }
+
+    // ─── 3. AUTO-EXPLICAÇÃO AO MUDAR DE SLIDE ─────────────────────────────────
+    let autoExplainEnabled = false;
+    let autoExplainTimer = null;
+    let lastAutoExplainedId = null;
+
+    function toggleAutoExplain() {
+        autoExplainEnabled = !autoExplainEnabled;
+        const btn = document.getElementById('auto-explain-btn');
+        btn.classList.toggle('playing', autoExplainEnabled);
+        btn.innerHTML = autoExplainEnabled ? '🤖 Auto ON' : '🤖 Auto IA';
+        btn.title = autoExplainEnabled ? 'Desativar auto-explicação' : 'Ativar auto-explicação por IA';
+        if (!autoExplainEnabled) { clearTimeout(autoExplainTimer); window.speechSynthesis?.cancel(); }
+    }
+
+    async function autoExplainSlide(section) {
+        if (!autoExplainEnabled) return;
+        const slideText = getSlideText(section);
+        if (!slideText || slideText.length < 30) return;
+        try {
+            const prompt = `Explique este slide sobre DevSecOps em 3 frases curtas e amigaveis em Portugues do Brasil para um iniciante: ${slideText.slice(0, 500)}`;
+            const data = await callOllamaAPI([{ role: 'user', content: prompt }]);
+            const explanation = data?.message?.content;
+            if (explanation && autoExplainEnabled) falarTexto(explanation);
+        } catch (e) { console.error('autoExplain:', e); }
+    }
+
+    const slideObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.6 && autoExplainEnabled) {
+                const id = entry.target.id;
+                if (id && id !== lastAutoExplainedId) {
+                    clearTimeout(autoExplainTimer);
+                    autoExplainTimer = setTimeout(() => {
+                        lastAutoExplainedId = id;
+                        autoExplainSlide(entry.target);
+                    }, 2500);
+                }
+            }
+        });
+    }, { threshold: 0.6 });
+    document.querySelectorAll('.slide-container').forEach(s => slideObserver.observe(s));
+
+    // ─── Injetar botão "Narrar com IA" em todos os slides ─────────────────────
+    document.querySelectorAll('.slide-actions').forEach((actions) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'action-btn';
+        btn.setAttribute('aria-label', 'Narrar slide com Inteligência Artificial');
+        btn.onclick = function () { narrarComIA(this); };
+        btn.innerHTML = "<span aria-hidden='true'>🤖</span> Narrar com IA";
+        actions.insertBefore(btn, actions.firstChild);
     });
 
 </script>
