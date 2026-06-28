@@ -477,7 +477,7 @@
         </div>
     </div>
     <div class="chat-messages" id="chat-messages" aria-live="polite">
-        <div class="msg bot">Olá! Sou o Mentor IA, powered by Gemma 4 E2B a correr localmente no seu computador. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
+        <div class="msg bot">Olá! Sou o Mentor IA, powered by Gemma 3 4B rodando localmente no seu computador. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
     </div>
     <div class="typing-indicator" id="typing-indicator">O Mentor está a analisar...</div>
     <div class="chat-input">
@@ -526,13 +526,18 @@
     }
 
     // ─── Cliente Ollama local (Gemma 3 2B) ──────────────────────────────────────
-    const OLLAMA_MODEL = 'gemma4:e2b';
+    const OLLAMA_MODEL = 'gemma3:4b';
     const OLLAMA_URL   = 'http://localhost:11434/api/chat';
 
     async function callOllamaAPI(messages, systemPrompt = null) {
-        const ollamaMessages = systemPrompt
-            ? [{ role: 'system', content: systemPrompt }, ...messages]
-            : [...messages];
+        // Gemma 4 nao suporta role "system" — incorpora as instrucoes na primeira mensagem
+        let ollamaMessages = messages.map(m => ({ ...m }));
+        if (systemPrompt && ollamaMessages.length > 0 && ollamaMessages[0].role === 'user') {
+            ollamaMessages[0] = {
+                role: 'user',
+                content: systemPrompt + '\n\n' + ollamaMessages[0].content
+            };
+        }
 
         const response = await fetch(OLLAMA_URL, {
             method: 'POST',
@@ -557,7 +562,7 @@
         addMessageToUI(text, 'user');
         typingIndicator.style.display = 'block';
 
-        const systemPrompt = "Você é um mentor especialista em DevSecOps e Segurança da Informação, criado para ajudar iniciantes. O utilizador está a ler uma apresentação sobre DevSecOps. Responda às perguntas do utilizador de forma amigável, clara, concisa (máximo de 2 a 3 parágrafos curtos) e utilize analogias fáceis do dia a dia sempre que possível. Mantenha o idioma em Português de Portugal. Responda APENAS sobre tópicos de DevSecOps e segurança da informação.";
+        const systemPrompt = "Voce e um mentor de DevSecOps para iniciantes. Responda em Portugues do Brasil, de forma amigavel e concisa (max 2 paragrafos). Use analogias simples. Responda so sobre DevSecOps e seguranca.";
 
         chatHistory.push({ role: "user", content: text });
 
@@ -813,13 +818,7 @@
         addMessageToUI("⏳ O Mentor está a criar um desafio relâmpago para si...", "bot");
         
         // Instrui o Claude a devolver APENAS JSON válido, sem markdown
-        const systemPromptQuiz = `Você é um gerador de quiz de DevSecOps. Responda APENAS com JSON puro e válido, sem markdown, sem blocos de código, sem texto adicional antes ou depois. O JSON deve ter exactamente este formato:
-{
-  "pergunta": "enunciado da pergunta aqui",
-  "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
-  "indiceCorreta": 0,
-  "explicacao": "explicação da resposta correta"
-}`;
+        const systemPromptQuiz = `Responda APENAS com JSON valido, sem markdown. Formato obrigatorio: {"pergunta":"texto","opcoes":["A","B","C","D"],"indiceCorreta":0,"explicacao":"texto"}. Use Portugues do Brasil.`;
 
         const messages = [{
             role: "user",
@@ -890,7 +889,7 @@
         
         addMessageToUI("⏳ O Mentor está a gerar um resumo executivo com todas as 8 fases do DevSecOps...", "bot");
         
-        const systemPrompt = "Você é um mentor especialista em DevSecOps a ajudar um aluno iniciante. Use Português de Portugal.";
+        const systemPrompt = "Voce e um mentor de DevSecOps. Responda em Portugues do Brasil para iniciantes.";
         const messages = [{
             role: "user",
             content: "Faça um resumo executivo muito objetivo, em tópicos, focado nas 8 Fases do DevSecOps (Plan, Code, Build, Test, Release, Deploy, Operate, Monitor). Use um emoji legal para cada fase. O idioma deve ser Português de Portugal e voltado para iniciantes."
