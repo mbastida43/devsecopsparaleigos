@@ -84,15 +84,6 @@
         .explain-fab { position: fixed; background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(16,185,129,0.4); z-index: 1001; transition: transform 0.2s; display: none; }
         .explain-fab:hover { transform: scale(1.05); }
 
-        /* Painel de configuração da chave API */
-        .key-panel { padding: 16px 20px; background: #fffbeb; border-bottom: 1px solid #fde68a; display: none; }
-        .key-panel p { font-size: 13px; color: #92400e; margin: 0 0 10px; line-height: 1.5; }
-        .key-panel input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 8px; font-family: monospace; box-sizing: border-box; }
-        .key-panel input:focus { border-color: #4f46e5; }
-        .key-panel .key-save-btn { width: 100%; background: #4f46e5; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s; }
-        .key-panel .key-save-btn:hover { background: #4338ca; }
-        .key-change-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
-        .key-change-btn:hover { background: rgba(255,255,255,0.35); }
 
     </style>
 </head>
@@ -482,17 +473,11 @@
         <div style="display: flex; gap: 5px;">
             <button type="button" class="summary-btn" onclick="gerarResumoExecutivo()" title="Resumo Executivo em Tópicos">📋 Resumo</button>
             <button type="button" class="quiz-btn" onclick="gerarQuiz()" title="Testar conhecimento">📝 Quiz</button>
-            <button type="button" class="key-change-btn" onclick="mostrarPainelChave()" title="Alterar chave API" aria-label="Alterar chave da API">🔑</button>
             <button type="button" class="close-chat" onclick="toggleChat()" aria-label="Fechar chat">×</button>
         </div>
     </div>
-    <div class="key-panel" id="key-panel" role="region" aria-label="Configuração da chave API">
-        <p>Para usar o Mentor IA insira a sua chave da API Anthropic. Ela fica guardada <strong>apenas no seu browser</strong> (localStorage) e nunca é enviada a terceiros.</p>
-        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." aria-label="Chave da API Anthropic" onkeypress="if(event.key==='Enter') salvarChaveAPI()">
-        <button type="button" class="key-save-btn" onclick="salvarChaveAPI()">Guardar e Continuar</button>
-    </div>
     <div class="chat-messages" id="chat-messages" aria-live="polite">
-        <div class="msg bot">Olá! Sou o Mentor IA. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
+        <div class="msg bot">Olá! Sou o Mentor IA, powered by Gemma 4 E2B a correr localmente no seu computador. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
     </div>
     <div class="typing-indicator" id="typing-indicator">O Mentor está a analisar...</div>
     <div class="chat-input">
@@ -514,48 +499,11 @@
     let textoSelecionadoGlobal = "";
     let ultimoBotaoAnalogiaAtivado = null;
 
-    // ─── Gestão da chave API (guardada em localStorage) ─────────────────────────
-    const KEY_STORAGE = 'anthropic_api_key';
-
-    function getChaveAPI() {
-        return localStorage.getItem(KEY_STORAGE) || '';
-    }
-
-    function salvarChaveAPI() {
-        const keyInput = document.getElementById('api-key-input');
-        const key = keyInput.value.trim();
-        if (!key) return;
-        localStorage.setItem(KEY_STORAGE, key);
-        keyInput.value = '';
-        document.getElementById('key-panel').style.display = 'none';
-        addMessageToUI('✅ Chave guardada! Pode agora fazer as suas perguntas.', 'bot');
-        userInput.focus();
-    }
-
-    function mostrarPainelChave() {
-        const kp = document.getElementById('key-panel');
-        kp.style.display = kp.style.display === 'none' || kp.style.display === '' ? 'block' : 'none';
-        if (kp.style.display === 'block') document.getElementById('api-key-input').focus();
-    }
-
-    function verificarChaveAPI() {
-        if (!getChaveAPI()) {
-            document.getElementById('key-panel').style.display = 'block';
-            setTimeout(() => document.getElementById('api-key-input').focus(), 50);
-        }
-    }
-
     function toggleChat() {
         chatPanel.classList.toggle('active');
         const isActive = chatPanel.classList.contains('active');
         chatPanel.setAttribute('aria-hidden', !isActive);
-        if (isActive) {
-            if (!getChaveAPI()) {
-                verificarChaveAPI();
-            } else {
-                userInput.focus();
-            }
-        }
+        if (isActive) userInput.focus();
     }
 
     function handleEnter(e) {
@@ -577,56 +525,26 @@
         chatMessages.scrollTop = chatMessages.scrollHeight; 
     }
 
-    // ─── Cliente da API Anthropic (Claude) ──────────────────────────────────────
-    async function callClaudeAPI(messages, systemPrompt = null, retryCount = 0) {
-        const apiKey = getChaveAPI();
-        if (!apiKey) {
-            document.getElementById('key-panel').style.display = 'block';
-            setTimeout(() => document.getElementById('api-key-input').focus(), 50);
-            throw new Error('Chave API não configurada');
+    // ─── Cliente Ollama local (Gemma 3 2B) ──────────────────────────────────────
+    const OLLAMA_MODEL = 'gemma4:e2b';
+    const OLLAMA_URL   = 'http://localhost:11434/api/chat';
+
+    async function callOllamaAPI(messages, systemPrompt = null) {
+        const ollamaMessages = systemPrompt
+            ? [{ role: 'system', content: systemPrompt }, ...messages]
+            : [...messages];
+
+        const response = await fetch(OLLAMA_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: OLLAMA_MODEL, messages: ollamaMessages, stream: false })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text().catch(() => 'sem detalhe');
+            throw new Error(`Ollama: status ${response.status} — ${errText}`);
         }
-
-        const body = {
-            model: "claude-sonnet-4-6",
-            max_tokens: 1000,
-            messages: messages
-        };
-        if (systemPrompt) body.system = systemPrompt;
-
-        try {
-            const response = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-api-key": apiKey,
-                    "anthropic-version": "2023-06-01",
-                    "anthropic-dangerous-direct-browser-access": "true"
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    localStorage.removeItem(KEY_STORAGE);
-                    document.getElementById('key-panel').style.display = 'block';
-                    throw new Error('Chave API inválida');
-                }
-                if ((response.status === 429 || response.status >= 500) && retryCount < 3) {
-                    const delay = Math.pow(2, retryCount) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return callClaudeAPI(messages, systemPrompt, retryCount + 1);
-                }
-                throw new Error(`API retornou status ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            if (retryCount < 3 && !error.message.includes('inválida') && !error.message.includes('configurada')) {
-                const delay = Math.pow(2, retryCount) * 1000;
-                await new Promise(resolve => setTimeout(resolve, delay));
-                return callClaudeAPI(messages, systemPrompt, retryCount + 1);
-            }
-            throw error;
-        }
+        return await response.json();
     }
 
     async function sendMessage() {
@@ -644,24 +562,17 @@
         chatHistory.push({ role: "user", content: text });
 
         try {
-            const data = await callClaudeAPI(chatHistory, systemPrompt);
-
-            if (data.content && data.content.length > 0) {
-                const botReply = data.content[0].text;
+            const data = await callOllamaAPI(chatHistory, systemPrompt);
+            const botReply = data?.message?.content;
+            if (botReply) {
                 addMessageToUI(botReply, 'bot');
-                chatHistory.push({ role: "assistant", content: botReply });
+                chatHistory.push({ role: 'assistant', content: botReply });
             } else {
-                addMessageToUI("Desculpe, a ligação ao servidor falhou ao processar a resposta. Tente reformular.", 'bot');
+                addMessageToUI("Desculpe, não consegui processar a resposta. Tente reformular.", 'bot');
             }
         } catch (error) {
-            console.error("Erro na API Claude:", error);
-            if (error.message.includes('configurada')) {
-                addMessageToUI("⚠️ Insira a sua chave da API Anthropic no painel amarelo acima para usar o Mentor IA.", 'bot');
-            } else if (error.message.includes('inválida')) {
-                addMessageToUI("❌ Chave da API inválida. Por favor, insira uma chave válida no painel acima.", 'bot');
-            } else {
-                addMessageToUI("Aconteceu um problema de ligação com a rede. Tente enviar a sua dúvida novamente em alguns segundos.", 'bot');
-            }
+            console.error("Erro Ollama:", error);
+            addMessageToUI("❌ Erro ao contactar o Ollama:\n\n" + error.message, 'bot');
         } finally {
             typingIndicator.style.display = 'none';
             userInput.disabled = false;
@@ -916,16 +827,14 @@
         }];
 
         try {
-            const result = await callClaudeAPI(messages, systemPromptQuiz);
-            let jsonText = result.content[0].text;
-            // Remove possíveis blocos markdown de código que o modelo possa ter inserido
+            const result = await callOllamaAPI(messages, systemPromptQuiz);
+            let jsonText = result?.message?.content || '';
             jsonText = jsonText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
             const quizData = JSON.parse(jsonText);
-            
             renderQuizUI(quizData);
         } catch (e) {
             console.error(e);
-            addMessageToUI("❌ Ups, não consegui gerar o quiz agora. Aconteceu um erro de rede. Tente novamente!", "bot");
+            addMessageToUI("❌ Ups, não consegui gerar o quiz. Verifique se o Ollama está em execução e tente novamente.", "bot");
         } finally {
             quizBtn.innerText = originalBtnText;
             quizBtn.disabled = false;
@@ -988,15 +897,15 @@
         }];
 
         try {
-            const result = await callClaudeAPI(messages, systemPrompt);
-            if (result.content && result.content.length > 0) {
-                const botReply = result.content[0].text;
+            const result = await callOllamaAPI(messages, systemPrompt);
+            const botReply = result?.message?.content;
+            if (botReply) {
                 addMessageToUI(botReply, 'bot');
-                chatHistory.push({ role: "assistant", content: botReply });
+                chatHistory.push({ role: 'assistant', content: botReply });
             }
         } catch (e) {
             console.error(e);
-            addMessageToUI("❌ Ups, não consegui gerar o resumo agora. Aconteceu um erro de rede.", "bot");
+            addMessageToUI("❌ Ups, não consegui gerar o resumo. Verifique se o Ollama está em execução.", "bot");
         } finally {
             summaryBtn.innerText = originalBtnText;
             summaryBtn.disabled = false;
