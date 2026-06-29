@@ -30,7 +30,27 @@ $server = Start-Process -FilePath 'python' `
     -WindowStyle Hidden `
     -PassThru
 
-Start-Sleep -Seconds 2
+$maxWaitMs = 8000
+$elapsed   = 0
+$ready     = $false
+while ($elapsed -lt $maxWaitMs) {
+    Start-Sleep -Milliseconds 250
+    $elapsed += 250
+    if ($server.HasExited) { break }
+    try {
+        $tcp = [System.Net.Sockets.TcpClient]::new()
+        $tcp.Connect('127.0.0.1', 3000)
+        $tcp.Close()
+        $ready = $true
+        break
+    } catch { }
+}
+
+if (-not $ready) {
+    Write-Host '  [ERRO] Servidor nao respondeu. Porta 3000 ja em uso ou Python falhou.' -ForegroundColor Red
+    Read-Host '  Pressione ENTER para sair'
+    exit 1
+}
 
 Write-Host '  Abrindo apresentacao no browser...' -ForegroundColor Green
 Start-Process $url
@@ -44,4 +64,3 @@ $null = Read-Host
 Write-Host '  Encerrando servidor...' -ForegroundColor Yellow
 Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
 Write-Host '  Servidor encerrado. Ate logo!' -ForegroundColor Cyan
-Start-Sleep -Seconds 1

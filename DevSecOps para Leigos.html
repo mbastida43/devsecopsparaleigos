@@ -534,13 +534,14 @@
     const OLLAMA_URL   = 'http://localhost:11434/api/chat';
 
     async function callOllamaAPI(messages, systemPrompt = null) {
-        // Gemma 4 nao suporta role "system" — incorpora as instrucoes na primeira mensagem
-        let ollamaMessages = messages.map(m => ({ ...m }));
-        if (systemPrompt && ollamaMessages.length > 0 && ollamaMessages[0].role === 'user') {
-            ollamaMessages[0] = {
-                role: 'user',
-                content: systemPrompt + '\n\n' + ollamaMessages[0].content
-            };
+        // Gemma 3 nao suporta role "system" via Ollama — injeta systemPrompt no conteudo do utilizador
+        let ollamaMessages = [...messages];
+        if (systemPrompt) {
+            if (ollamaMessages.length > 0 && ollamaMessages[0].role === 'user') {
+                ollamaMessages[0] = { role: 'user', content: systemPrompt + '\n\n' + ollamaMessages[0].content };
+            } else {
+                ollamaMessages.unshift({ role: 'user', content: systemPrompt });
+            }
         }
 
         const response = await fetch(OLLAMA_URL, {
@@ -669,15 +670,17 @@
         };
 
         utterance.onerror = (e) => {
-            if (e.error === 'interrupted') return; // silencioso quando o utilizador pára
-            console.error('SpeechSynthesis error:', e);
             btn.classList.remove('playing');
-            btn.innerHTML = "<span aria-hidden='true'>❌</span> Erro de áudio";
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                if (originalAriaLabel) btn.setAttribute('aria-label', originalAriaLabel);
-                btn.classList.remove('playing');
-            }, 2000);
+            btn.innerHTML = originalHtml;
+            if (originalAriaLabel) btn.setAttribute('aria-label', originalAriaLabel);
+            if (e.error !== 'interrupted') {
+                console.error('SpeechSynthesis error:', e);
+                btn.innerHTML = "<span aria-hidden='true'>❌</span> Erro de áudio";
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    if (originalAriaLabel) btn.setAttribute('aria-label', originalAriaLabel);
+                }, 2000);
+            }
         };
 
         // Chrome/Edge: getVoices() retorna [] na primeira chamada — aguardar voiceschanged
@@ -843,10 +846,14 @@
                 falarTexto(analogy);
             } else {
                 titleEl.textContent = '❌ Erro ao gerar analogia';
+                imgEl.src = 'https://placehold.co/600x400/fee2e2/dc2626?text=Sem+resposta';
+                textDescEl.textContent = 'A IA não gerou resposta. Tente novamente.';
+                textDescEl.style.display = 'block';
             }
         } catch (e) {
             console.error('gerarAnalogiaVisual:', e);
             titleEl.textContent = '❌ Gemma nao respondeu';
+            imgEl.src = 'https://placehold.co/600x400/fee2e2/dc2626?text=Erro';
             textDescEl.textContent = 'Verifique se o Ollama esta rodando.';
             textDescEl.style.display = 'block';
         }
@@ -919,7 +926,7 @@
                     addMessageToUI(`✅ **Excelente!** ${quizData.explicacao}\n\n_Acertos: ${quizStats.correct}/${quizStats.total}_`, "bot");
                 } else {
                     btn.classList.add('wrong');
-                    container.children[quizData.indiceCorreta].classList.add('correct');
+                    container.children[quizData.indiceCorreta]?.classList.add('correct');
                     addMessageToUI(`❌ **Quase lá.** A resposta certa era a número ${quizData.indiceCorreta + 1}.\n\n${quizData.explicacao}\n\n_Acertos: ${quizStats.correct}/${quizStats.total}_`, "bot");
                 }
             };
@@ -943,7 +950,7 @@
         const systemPrompt = "Voce e um mentor de DevSecOps. Responda em Portugues do Brasil para iniciantes.";
         const messages = [{
             role: "user",
-            content: "Faça um resumo executivo muito objetivo, em tópicos, focado nas 8 Fases do DevSecOps (Plan, Code, Build, Test, Release, Deploy, Operate, Monitor). Use um emoji legal para cada fase. O idioma deve ser Português de Portugal e voltado para iniciantes."
+            content: "Faça um resumo executivo muito objetivo, em tópicos, focado nas 8 Fases do DevSecOps (Plan, Code, Build, Test, Release, Deploy, Operate, Monitor). Use um emoji legal para cada fase. O idioma deve ser Português do Brasil e voltado para iniciantes."
         }];
 
         try {
@@ -1049,7 +1056,7 @@
         if (!autoExplainEnabled) { clearTimeout(autoExplainTimer); window.speechSynthesis?.cancel(); }
     }
 
-    async function autoExplainSlide(section) {
+    async function autoExplainSlide(section, slideId) {
         if (!autoExplainEnabled) return;
         const slideText = getSlideText(section);
         if (!slideText || slideText.length < 30) return;
@@ -1057,7 +1064,10 @@
             const prompt = `Explique este slide sobre DevSecOps em 3 frases curtas e amigaveis em Portugues do Brasil para um iniciante: ${slideText.slice(0, 500)}`;
             const data = await callOllamaAPI([{ role: 'user', content: prompt }]);
             const explanation = data?.message?.content;
-            if (explanation && autoExplainEnabled) falarTexto(explanation);
+            if (explanation && autoExplainEnabled) {
+                lastAutoExplainedId = slideId;
+                falarTexto(explanation);
+            }
         } catch (e) { console.error('autoExplain:', e); }
     }
 
@@ -1068,10 +1078,11 @@
                 if (id && id !== lastAutoExplainedId) {
                     clearTimeout(autoExplainTimer);
                     autoExplainTimer = setTimeout(() => {
-                        lastAutoExplainedId = id;
-                        autoExplainSlide(entry.target);
+                        autoExplainSlide(entry.target, id);
                     }, 2500);
                 }
+            } else if (!entry.isIntersecting) {
+                clearTimeout(autoExplainTimer);
             }
         });
     }, { threshold: 0.6 });
