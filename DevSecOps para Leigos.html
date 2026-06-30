@@ -620,7 +620,7 @@
         addMessageToUI(text, 'user');
         typingIndicator.style.display = 'block';
 
-        const systemPrompt = "Voce e um mentor de DevSecOps para iniciantes. Responda em Portugues do Brasil, de forma amigavel e concisa (max 2 paragrafos). Use analogias simples. Responda so sobre DevSecOps e seguranca.";
+        const systemPrompt = "Voce e um mentor profissional de DevSecOps explicando para iniciantes. REGRAS: escreva em Portugues do Brasil correto, com tom profissional, claro e didatico. NAO use girias, NAO use saudacoes informais (nada de 'E ai', 'Saude', 'jovens'), NAO use emojis. Estrutura da resposta: 1) defina o conceito em uma frase, 2) explique por que importa, 3) de um exemplo pratico curto. Seja objetivo, no maximo 2 paragrafos. Responda apenas sobre DevSecOps, seguranca e desenvolvimento de software; se a pergunta fugir do tema, redirecione educadamente.";
 
         chatHistory.push({ role: "user", content: text });
 
@@ -835,7 +835,7 @@
         btn.disabled = true;
 
         try {
-            const prompt = `Voce e um educador. Explique o seguinte conteudo de slide sobre DevSecOps de forma amigavel em 3 frases curtas em Portugues do Brasil para um iniciante. Nao repita o titulo: ${slideText.slice(0, 600)}`;
+            const prompt = `Voce e um educador profissional. Explique o conteudo deste slide sobre DevSecOps em 3 frases curtas, claras e didaticas, em Portugues do Brasil correto, com tom profissional e sem girias nem saudacoes informais. Nao repita o titulo: ${slideText.slice(0, 600)}`;
             const data = await callOllamaAPI([{ role: 'user', content: prompt }]);
             const explanation = data?.message?.content;
             if (explanation) {
@@ -895,7 +895,7 @@
         const conceito = limparPromptParaDescricao(prompt);
 
         try {
-            const pergunta = `Crie uma analogia criativa e simples do dia a dia para explicar este conceito de DevSecOps para um iniciante, em Portugues do Brasil, em no maximo 2 frases: "${conceito}"`;
+            const pergunta = `Crie uma analogia criativa e simples do dia a dia para explicar este conceito de DevSecOps para um iniciante, em Portugues do Brasil correto e claro, com tom didatico e sem girias, em no maximo 2 frases: "${conceito}"`;
             const data = await callOllamaAPI([{ role: 'user', content: pergunta }]);
             const analogy = data?.message?.content?.trim();
             if (analogy) {
@@ -1008,7 +1008,7 @@
         
         addMessageToUI("⏳ O Mentor está a gerar um resumo executivo com todas as 8 fases do DevSecOps...", "bot");
         
-        const systemPrompt = "Voce e um mentor de DevSecOps. Responda em Portugues do Brasil para iniciantes.";
+        const systemPrompt = "Voce e um mentor de DevSecOps. Responda em Portugues do Brasil correto, com tom profissional e didatico, para iniciantes. Sem girias nem saudacoes informais.";
         const messages = [{
             role: "user",
             content: "Faça um resumo executivo muito objetivo, em tópicos, focado nas 8 Fases do DevSecOps (Plan, Code, Build, Test, Release, Deploy, Operate, Monitor). Use um emoji legal para cada fase. O idioma deve ser Português do Brasil e voltado para iniciantes."
@@ -1123,7 +1123,7 @@
         const slideText = getSlideText(section);
         if (!slideText || slideText.length < 30) return;
         try {
-            const prompt = `Explique este slide sobre DevSecOps em 3 frases curtas e amigaveis em Portugues do Brasil para um iniciante: ${slideText.slice(0, 500)}`;
+            const prompt = `Explique este slide sobre DevSecOps em 3 frases curtas, claras e didaticas, em Portugues do Brasil correto e com tom profissional, sem girias nem saudacoes informais, para um iniciante: ${slideText.slice(0, 500)}`;
             const data = await callOllamaAPI([{ role: 'user', content: prompt }]);
             const explanation = data?.message?.content;
             if (explanation && autoExplainEnabled) {

@@ -222,6 +222,57 @@ Para usar outro modelo, basta baixá-lo com `ollama pull <modelo>` e trocar o no
 
 > ⚠️ **Atenção:** modelos maiores precisam ler muito mais dados da memória a cada palavra gerada. Sem uma GPU moderna, eles ficam **muito lentos** (uma resposta pode levar minutos). Se a sua máquina não tem placa de vídeo dedicada e recente, mantenha o `gemma3:1b`.
 
+### Versão "mobile" (Gemma 3n) — para máquinas com GPU dedicada
+
+> ℹ️ **Nota de nome:** não existe "Gemma 4". A família **mobile / on-device** do Google (a mesma que roda em celulares) chama-se **Gemma 3n**. A menor é a **`gemma3n:e2b`** — o `e2b` significa *"2 bilhões efetivos"* de parâmetros.
+
+Ela usa uma técnica (Per-Layer Embeddings) que faz o modelo **ativar só ~2B de parâmetros por palavra gerada**, mesmo o arquivo sendo maior. Resultado: em uma **GPU dedicada com VRAM suficiente**, ela é **muito rápida** e entrega qualidade melhor que o `gemma3:1b`.
+
+**Baixar e ativar:**
+
+```powershell
+ollama pull gemma3n:e2b
+```
+
+Depois, no arquivo `DevSecOps para Leigos.html`, troque a linha do modelo para:
+
+```javascript
+const OLLAMA_MODEL = 'gemma3n:e2b';
+```
+
+#### Cálculo: minha GPU aguenta?
+
+**1) Quanta VRAM preciso?** A regra prática é:
+
+```
+VRAM necessária ≈ tamanho do modelo (Q4) + memória de contexto (~1,5 GB)
+```
+
+A `gemma3n:e2b` ocupa **~5,6 GB** quantizada (Q4). Logo:
+
+```
+5,6 GB (modelo) + 1,5 GB (contexto) ≈ 7,1 GB de VRAM
+```
+
+➡️ **Recomendado: GPU com 8 GB de VRAM ou mais** para rodar 100% na placa (ex.: RTX 3060 12 GB, RTX 4060 8 GB, RTX 3070). Com menos VRAM, parte cai na CPU e fica lento.
+
+**2) Quão rápido vai ser?** A geração é limitada pela **banda de memória**:
+
+```
+tokens por segundo ≈ banda de memória (GB/s) ÷ dados lidos por palavra (GB)
+```
+
+Como a `gemma3n:e2b` lê só **~2 GB efetivos por palavra**, numa GPU dedicada o ganho é enorme:
+
+| GPU | Banda de memória | Cabe na VRAM? | Velocidade estimada |
+|---|---|---|---|
+| RTX 3060 12 GB | ~360 GB/s | ✅ Sim | ~360 ÷ 2 ≈ **180 tok/s** (teórico); na prática **~50-80 tok/s** — instantâneo |
+| RTX 4060 8 GB | ~270 GB/s | ✅ Sim (no limite) | **~40-60 tok/s** |
+| GTX 1650 4 GB | ~190 GB/s | ❌ Não (precisa ~7 GB) | parte na CPU → lento |
+| GeForce GT 640 1 GB (máquina atual) | ~28 GB/s | ❌ Não | inviável — por isso usamos o `gemma3:1b` |
+
+> 📌 **Resumo do cálculo:** para a `gemma3n:e2b` valer a pena, a GPU precisa de **≥ 8 GB de VRAM**. Tendo isso, ela roda muito rápido (dezenas de tokens/s) e com qualidade superior ao `gemma3:1b`. Em GPUs pequenas (como a de 1 GB desta máquina), ela **não cabe** e fica lenta — daí o padrão do projeto ser o modelo leve.
+
 ---
 
 ## Solução de problemas
