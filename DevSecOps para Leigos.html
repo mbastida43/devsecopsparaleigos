@@ -481,7 +481,7 @@
         </div>
     </div>
     <div class="chat-messages" id="chat-messages" aria-live="polite">
-        <div class="msg bot">Olá! Sou o Mentor IA, powered by Gemma 3 4B rodando localmente no seu computador. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
+        <div class="msg bot">Olá! Sou o Mentor IA, powered by Gemma 3 1B rodando localmente no seu computador. Viu alguma sopa de letrinhas (como CI/CD, Linting, Git) nos slides e ficou com dúvidas? Pergunte-me, peça um Quiz, ou selecione um texto para eu explicar!</div>
     </div>
     <div class="typing-indicator" id="typing-indicator">O Mentor está a analisar...</div>
     <div class="chat-input">
@@ -539,8 +539,8 @@
         return msgDiv;
     }
 
-    // ─── Cliente Ollama local (Gemma 3 2B) ──────────────────────────────────────
-    const OLLAMA_MODEL = 'gemma3:4b';
+    // ─── Cliente Ollama local (Gemma 3 1B) ──────────────────────────────────────
+    const OLLAMA_MODEL = 'gemma3:1b';
     const OLLAMA_URL   = 'http://localhost:11434/api/chat';
     // Limite de tokens da resposta — evita "paredões" e deixa as respostas muito mais rápidas
     const MAX_TOKENS   = 400;
