@@ -36,7 +36,9 @@ Este projeto tem a **mesma apresentação em formatos diferentes**, para você e
 
 ## O que é o Mentor IA?
 
-O arquivo HTML contém um assistente de inteligência artificial embutido. Ele usa o modelo **Gemma 3 4B** da Google — um modelo open source com 4 bilhões de parâmetros que roda diretamente no seu computador, sem precisar enviar nada para a internet.
+O arquivo HTML contém um assistente de inteligência artificial embutido. Ele usa o modelo **Gemma 3 1B** da Google — um modelo open source leve (cerca de 1 bilhão de parâmetros) que roda diretamente no seu computador, sem precisar enviar nada para a internet.
+
+> ⚡ **Por que o modelo leve (1B)?** Ele foi escolhido para responder **rápido mesmo em computadores modestos**. As respostas aparecem em **streaming** (palavra por palavra, em tempo real) e começam em poucos segundos. Modelos maiores (como o `gemma3:4b`) dão respostas um pouco mais elaboradas, mas ficam lentos em máquinas sem uma GPU moderna — veja a seção [Quer trocar o modelo?](#quer-trocar-o-modelo-avançado).
 
 O Mentor consegue:
 - Responder perguntas sobre DevSecOps em Português do Brasil
@@ -69,15 +71,15 @@ Deve aparecer algo como `ollama version is 0.30.11`. Se aparecer, está instalad
 
 ---
 
-### Passo 2 — Baixar o modelo Gemma 3 4B
+### Passo 2 — Baixar o modelo Gemma 3 1B
 
 Com o Ollama instalado, agora você precisa baixar o "cérebro" da IA. No **PowerShell**, execute:
 
 ```powershell
-ollama pull gemma3:4b
+ollama pull gemma3:1b
 ```
 
-> O download tem aproximadamente **2,5 GB**. Vai levar alguns minutos dependendo da sua internet. Execute esse comando apenas uma vez — o modelo fica salvo no seu computador.
+> O download tem aproximadamente **815 MB**. Vai levar poucos minutos dependendo da sua internet. Execute esse comando apenas uma vez — o modelo fica salvo no seu computador.
 
 Quando terminar, aparecerá a mensagem `success`.
 
@@ -183,6 +185,7 @@ Ao usar o servidor Python (`http.server`), o arquivo é servido via `http://loca
 - **📝 Quiz adaptativo** — perguntas geradas pela IA com dificuldade que sobe conforme você acerta
 - **📋 Resumo** — resumo executivo das 8 fases do DevSecOps gerado pela IA
 - **Chat** — tire dúvidas em texto com o Gemma a qualquer momento
+- **⚡ Respostas em streaming** — o texto aparece palavra por palavra, em tempo real, sem ficar esperando a resposta inteira ficar pronta
 
 ---
 
@@ -190,15 +193,34 @@ Ao usar o servidor Python (`http.server`), o arquivo é servido via `http://loca
 
 | Propriedade | Valor |
 |---|---|
-| Modelo | Gemma 3 4B |
+| Modelo | Gemma 3 1B |
 | Desenvolvedor | Google |
-| Parâmetros | 4 bilhões |
+| Parâmetros | ~1 bilhão |
 | Licença | Open source (Gemma Terms of Use) |
 | Execução | 100% local via Ollama |
-| Comando para baixar | `ollama pull gemma3:4b` |
-| Tamanho do download | ~2,5 GB |
+| Comando para baixar | `ollama pull gemma3:1b` |
+| Tamanho do download | ~815 MB |
 
-O Gemma 3 4B é uma excelente opção para uso local: equilibra qualidade de resposta com uso de memória RAM, funcionando bem em computadores com 8 GB de RAM ou mais.
+O Gemma 3 1B é leve e rápido: por ocupar pouca memória, responde em poucos segundos mesmo em computadores sem uma placa de vídeo (GPU) moderna. Para um material didático "para leigos", entrega ótimo custo-benefício entre velocidade e qualidade.
+
+---
+
+## Quer trocar o modelo? (avançado)
+
+O modelo usado fica definido em **uma única linha** dentro do arquivo `DevSecOps para Leigos.html`. Procure por:
+
+```javascript
+const OLLAMA_MODEL = 'gemma3:1b';
+```
+
+Para usar outro modelo, basta baixá-lo com `ollama pull <modelo>` e trocar o nome nessa linha. Exemplos:
+
+| Modelo | Velocidade | Qualidade | Quando faz sentido |
+|---|---|---|---|
+| `gemma3:1b` (padrão) | ⚡⚡⚡ Rápido | Boa | Computadores modestos, sem GPU dedicada |
+| `gemma3:4b` | 🐢 Lento sem GPU | Muito boa | Só vale a pena com uma **GPU moderna** (vários GB de VRAM) |
+
+> ⚠️ **Atenção:** modelos maiores precisam ler muito mais dados da memória a cada palavra gerada. Sem uma GPU moderna, eles ficam **muito lentos** (uma resposta pode levar minutos). Se a sua máquina não tem placa de vídeo dedicada e recente, mantenha o `gemma3:1b`.
 
 ---
 
@@ -208,6 +230,12 @@ O Gemma 3 4B é uma excelente opção para uso local: equilibra qualidade de res
 - Verifique se o Ollama está rodando (ícone na barra de tarefas)
 - Verifique se você abriu a apresentação pelo servidor (`http://localhost:3000`) e não por duplo clique direto
 - Confirme que a variável OLLAMA_ORIGINS foi configurada (Passo 3) e que o Ollama foi reiniciado depois
+
+**O Mentor IA está muito lento para responder**
+- Use **apenas uma aba** da apresentação aberta por vez. Várias abas mandam perguntas ao mesmo tempo e dividem a memória do computador, deixando tudo lento.
+- A **primeira** pergunta após abrir a página é naturalmente mais lenta (~10s), porque o modelo está sendo carregado na memória. As seguintes vêm em poucos segundos.
+- Se você editou o HTML e a mudança não apareceu, o navegador pode estar usando uma versão antiga em **cache**. Recarregue com `Ctrl + Shift + R`, ou abra uma **janela anônima** (`Ctrl + Shift + N`), que ignora o cache.
+- Confirme que o modelo em uso é o leve: a saudação do chat deve dizer **"Gemma 3 1B"**.
 
 **A voz não fala / narração não funciona**
 - A narração usa a Web Speech API do browser — funciona melhor no Microsoft Edge e Google Chrome
