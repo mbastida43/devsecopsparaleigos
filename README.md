@@ -4,16 +4,33 @@ Apresentação interativa sobre DevSecOps com **acessibilidade completa** e um *
 
 ---
 
+## Qual arquivo eu devo abrir?
+
+Este projeto tem a **mesma apresentação em formatos diferentes**, para você escolher o que combina mais com a sua necessidade. Não precisa abrir todos — escolha um:
+
+- 🌟 **Quer acessibilidade e interatividade?** Use o arquivo **`DevSecOps para Leigos.html`**.
+  Esta é a versão recomendada para quem precisa de **recursos de acessibilidade**: narração dos slides em voz alta, descrições para leitores de tela (NVDA, JAWS), rótulos ARIA e um **Mentor de IA** que explica o conteúdo, cria analogias e gera quizzes. É a única versão "viva", que conversa com você. Veja como abrir na seção [Como abrir a apresentação](#como-abrir-a-apresentação-uso-diário).
+
+- 📊 **Quer apenas apresentar os slides (em reunião, sala de aula)?** Use o **`DevSecOps para Leigos V3.pptx`** no PowerPoint. É a versão mais recente e enxuta dos slides.
+
+- 📄 **Quer só ler ou imprimir, sem instalar nada?** Use um dos **PDFs**. Basta dar duplo clique — abre em qualquer computador, sem precisar de Ollama, Python ou internet.
+
+---
+
 ## Arquivos do projeto
 
-| Arquivo | O que é |
-|---|---|
-| `DevSecOps para Leigos.html` | A apresentação principal — abra no browser |
-| `Iniciar.ps1` | Script PowerShell para abrir a apresentação com um clique |
-| `DevSecOps para leigos V1.pptx` | Versão 1 em PowerPoint |
-| `DevSecOps para leigos V2.pptx` | Versão 2 em PowerPoint |
-| `DevSecOps para leigos V3.pdf` | Versão 3 em PDF |
-| `LICENSE` | Licença MIT |
+| Arquivo | O que é | Quando usar |
+|---|---|---|
+| `DevSecOps para Leigos.html` | **Apresentação interativa com acessibilidade + Mentor de IA** | Para quem quer narração, leitor de tela e a IA que explica os slides |
+| `Iniciar.ps1` | Script PowerShell que abre a apresentação HTML com um clique | Sempre que for usar a versão HTML |
+| `DevSecOps para Leigos V3.pptx` | Slides em PowerPoint — versão 3 (a mais recente) | Para apresentar ou editar os slides |
+| `DevSecOps para Leigos.pdf` | Apresentação completa em PDF | Para ler ou imprimir tudo, sem instalar nada |
+| `DevSecOps para leigos V3.pdf` | Slides da versão 3 em PDF | Para ler/imprimir a versão mais recente dos slides |
+| `DevSecOps para leigos V1.pptx` | Slides em PowerPoint — versão 1 (histórico) | Apenas referência de versões anteriores |
+| `DevSecOps para leigos V2.pptx` | Slides em PowerPoint — versão 2 (histórico) | Apenas referência de versões anteriores |
+| `LICENSE` | Licença MIT do projeto | — |
+
+> 💡 **Resumindo:** o **HTML é a estrela do projeto** — é a versão com acessibilidade e inteligência artificial. Os arquivos **PPTX e PDF** são cópias estáticas dos slides, para quem só quer ver, apresentar ou imprimir o conteúdo sem nenhuma configuração.
 
 ---
 
