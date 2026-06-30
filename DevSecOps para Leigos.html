@@ -516,24 +516,38 @@
         }
     }
 
+    function formatMsg(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<span class="markdown-bold">$1</span>')
+            .replace(/\n/g, '<br>');
+    }
+
     function addMessageToUI(text, sender) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('msg', sender);
-        
-        const formattedText = text
-            .replace(/\*\*(.*?)\*\*/g, '<span class="markdown-bold">$1</span>')
-            .replace(/\n/g, '<br>');
-            
-        msgDiv.innerHTML = formattedText;
+        msgDiv.innerHTML = formatMsg(text);
         chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight; 
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Cria uma bolha de resposta do bot vazia, para ser preenchida em tempo real (streaming)
+    function addBotBubble() {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('msg', 'bot');
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return msgDiv;
     }
 
     // ─── Cliente Ollama local (Gemma 3 2B) ──────────────────────────────────────
     const OLLAMA_MODEL = 'gemma3:4b';
     const OLLAMA_URL   = 'http://localhost:11434/api/chat';
+    // Limite de tokens da resposta — evita "paredões" e deixa as respostas muito mais rápidas
+    const MAX_TOKENS   = 400;
 
-    async function callOllamaAPI(messages, systemPrompt = null) {
+    // onToken: callback opcional (piece, textoAcumulado) — quando fornecido, ativa o modo streaming
+    // numPredict: limite de tokens da resposta (default MAX_TOKENS)
+    async function callOllamaAPI(messages, systemPrompt = null, onToken = null, numPredict = MAX_TOKENS) {
         // Gemma 3 nao suporta role "system" via Ollama — injeta systemPrompt no conteudo do utilizador
         let ollamaMessages = [...messages];
         if (systemPrompt) {
@@ -544,17 +558,56 @@
             }
         }
 
+        const useStream = typeof onToken === 'function';
         const response = await fetch(OLLAMA_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: OLLAMA_MODEL, messages: ollamaMessages, stream: false })
+            body: JSON.stringify({
+                model: OLLAMA_MODEL,
+                messages: ollamaMessages,
+                stream: useStream,
+                keep_alive: '30m',           // mantém o modelo na RAM entre perguntas (evita recarregar do disco)
+                options: { num_predict: numPredict }
+            })
         });
 
         if (!response.ok) {
             const errText = await response.text().catch(() => 'sem detalhe');
             throw new Error(`Ollama: status ${response.status} — ${errText}`);
         }
-        return await response.json();
+
+        // Modo não-streaming: devolve o JSON único (comportamento original)
+        if (!useStream) {
+            return await response.json();
+        }
+
+        // Modo streaming: o Ollama devolve NDJSON (um objeto JSON por linha)
+        const reader  = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // guarda a última linha (possivelmente incompleta)
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                try {
+                    const chunk = JSON.parse(trimmed);
+                    const piece = chunk?.message?.content || '';
+                    if (piece) {
+                        fullContent += piece;
+                        onToken(piece, fullContent);
+                    }
+                } catch (_) { /* linha parcial — ignora e aguarda o próximo pedaço */ }
+            }
+        }
+        // Mesmo formato de retorno do modo não-streaming, para manter a compatibilidade
+        return { message: { content: fullContent } };
     }
 
     async function sendMessage() {
@@ -571,18 +624,26 @@
 
         chatHistory.push({ role: "user", content: text });
 
+        // Bolha vazia que será preenchida em tempo real conforme os tokens chegam
+        const bubble = addBotBubble();
+
         try {
-            const data = await callOllamaAPI(chatHistory, systemPrompt);
+            const data = await callOllamaAPI(chatHistory, systemPrompt, (piece, full) => {
+                // Ao chegar o primeiro token, esconde o "a analisar..." e mostra a resposta
+                if (typingIndicator.style.display !== 'none') typingIndicator.style.display = 'none';
+                bubble.innerHTML = formatMsg(full);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
             const botReply = data?.message?.content;
             if (botReply) {
-                addMessageToUI(botReply, 'bot');
+                bubble.innerHTML = formatMsg(botReply);
                 chatHistory.push({ role: 'assistant', content: botReply });
             } else {
-                addMessageToUI("Desculpe, não consegui processar a resposta. Tente reformular.", 'bot');
+                bubble.innerHTML = formatMsg("Desculpe, não consegui processar a resposta. Tente reformular.");
             }
         } catch (error) {
             console.error("Erro Ollama:", error);
-            addMessageToUI("❌ Erro ao contactar o Ollama:\n\n" + error.message, 'bot');
+            bubble.innerHTML = formatMsg("❌ Erro ao contactar o Ollama:\n\n" + error.message);
         } finally {
             typingIndicator.style.display = 'none';
             userInput.disabled = false;
@@ -954,7 +1015,8 @@
         }];
 
         try {
-            const result = await callOllamaAPI(messages, systemPrompt);
+            // Resumo das 8 fases precisa de mais espaço que o limite padrão do chat
+            const result = await callOllamaAPI(messages, systemPrompt, null, 800);
             const botReply = result?.message?.content;
             if (botReply) {
                 addMessageToUI(botReply, 'bot');
@@ -1087,6 +1149,26 @@
         });
     }, { threshold: 0.6 });
     document.querySelectorAll('.slide-container').forEach(s => slideObserver.observe(s));
+
+    // ─── Pré-carrega o modelo na RAM ao abrir a página ────────────────────────
+    // Sem isto, a 1ª pergunta espera ~40s só para carregar 3,7 GB do disco.
+    // Disparado em segundo plano: quando o utilizador terminar de ler e perguntar, já está pronto.
+    (async function warmUpModel() {
+        try {
+            await fetch(OLLAMA_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: OLLAMA_MODEL,
+                    messages: [{ role: 'user', content: 'oi' }],
+                    stream: false,
+                    keep_alive: '30m',
+                    options: { num_predict: 1 }
+                })
+            });
+            console.log('Mentor IA pré-carregado e pronto.');
+        } catch (_) { /* Ollama desligado — silencioso; o erro real aparece ao enviar a 1ª pergunta */ }
+    })();
 
     // ─── Injetar botão "Narrar com IA" em todos os slides ─────────────────────
     document.querySelectorAll('.slide-actions').forEach((actions) => {
