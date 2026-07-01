@@ -49,6 +49,66 @@ O Mentor consegue:
 
 ---
 
+## Antes de começar — Abra e configure o PowerShell
+
+Todos os comandos deste projeto são executados no **PowerShell**. Siga os passos abaixo para ter um terminal moderno e atualizado no seu Windows.
+
+---
+
+### Como abrir o PowerShell
+
+**No Windows 10:**
+1. Pressione as teclas **Windows + R** ao mesmo tempo
+2. Digite `powershell` e pressione **Enter**
+
+Ou:
+- Clique no botão **Iniciar** com o botão **direito** do mouse
+- Selecione **Windows PowerShell**
+
+**No Windows 11:**
+- Clique no botão **Iniciar** com o botão **direito** do mouse
+- Selecione **Terminal** ou **Terminal do Windows**
+
+---
+
+### Instale o Windows Terminal (recomendado)
+
+O **Windows Terminal** é um terminal moderno da Microsoft — mais bonito, mais rápido e com abas. É gratuito e está disponível na Microsoft Store ou pelo `winget`.
+
+Primeiro, verifique se o `winget` está disponível no seu Windows:
+
+```powershell
+winget --version
+```
+
+Se aparecer algo como `v1.x.x`, o winget está disponível. Então instale o Windows Terminal:
+
+```powershell
+winget install --id Microsoft.WindowsTerminal
+```
+
+> O `winget` já vem instalado no **Windows 11** e no **Windows 10** atualizado (versão 1809 ou superior com a atualização de maio de 2020). Se o comando não funcionar, instale o Windows Terminal diretamente pela **Microsoft Store** — procure por "Windows Terminal".
+
+---
+
+### Instale a versão mais recente do PowerShell
+
+O Windows vem com o **Windows PowerShell 5.1** (versão antiga). A versão moderna chama-se **PowerShell 7+** e é mais rápida e completa. Instale pelo winget:
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
+
+Após instalar, **feche e reabra o terminal** e confirme a versão:
+
+```powershell
+$PSVersionTable.PSVersion
+```
+
+Deve aparecer `Major` igual a `7` ou superior. Se ainda mostrar `5`, abra o programa **PowerShell 7** pelo menu Iniciar (procure por "PowerShell 7").
+
+---
+
 ## Pré-requisitos — instale uma vez, use sempre
 
 ### Passo 1 — Instalar o Ollama
@@ -115,9 +175,25 @@ Verifique se já está instalado:
 python --version
 ```
 
-Se aparecer `Python 3.x.x`, já está pronto. Se não aparecer, baixe em **[python.org/downloads](https://python.org/downloads)** e instale normalmente.
+Se aparecer `Python 3.x.x`, já está pronto. Pode pular este passo.
 
-> Durante a instalação do Python, marque a opção **"Add Python to PATH"** — isso é importante!
+Se não aparecer, instale pelo winget (forma mais fácil — já adiciona ao PATH automaticamente):
+
+```powershell
+winget install --id Python.Python.3 --source winget
+```
+
+Após instalar, **feche e reabra o terminal** e confirme:
+
+```powershell
+python --version
+```
+
+Deve aparecer algo como `Python 3.13.x`.
+
+**Alternativa:** se preferir instalar manualmente, baixe em **[python.org/downloads](https://python.org/downloads)** e execute o instalador. Durante a instalação, marque obrigatoriamente a opção **"Add Python to PATH"** antes de clicar em Install Now.
+
+> ⚠️ Se não marcar "Add Python to PATH", o comando `python` não será reconhecido no terminal.
 
 ---
 
