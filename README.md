@@ -269,17 +269,30 @@ Ao usar o servidor Python (`http.server`), o arquivo é servido via `http://loca
 
 ## Modelo de IA utilizado
 
+### Hardware desta máquina (detectado automaticamente)
+
+| Componente | Modelo | Geração |
+|---|---|---|
+| Processador | Intel Core i7-4790K @ 4,0 GHz — 4 núcleos / 8 threads | **4ª geração Intel (Haswell, 2014)** |
+| Placa de vídeo | NVIDIA GeForce GT 640 | **1 GB de VRAM / ~28 GB/s de banda** |
+
+### Por que usamos o `gemma3:1b`?
+
+A GPU desta máquina tem apenas **1 GB de VRAM** — insuficiente para carregar qualquer modelo Gemma maior na placa de vídeo. O `gemma3:1b` foi escolhido porque:
+
+- Pesa **815 MB** — cabe na **RAM do sistema** (sem precisar de GPU)
+- Responde em **poucos segundos** mesmo rodando só no processador
+- O i7-4790K (4ª geração, 2014) ainda dá conta para inferência de modelos pequenos
+
 | Propriedade | Valor |
 |---|---|
-| Modelo | Gemma 3 1B |
+| Modelo em uso | `gemma3:1b` (Gemma 3 — 1 bilhão de parâmetros) |
 | Desenvolvedor | Google |
-| Parâmetros | ~1 bilhão |
 | Licença | Open source (Gemma Terms of Use) |
 | Execução | 100% local via Ollama |
 | Comando para baixar | `ollama pull gemma3:1b` |
 | Tamanho do download | ~815 MB |
-
-O Gemma 3 1B é leve e rápido: por ocupar pouca memória, responde em poucos segundos mesmo em computadores sem uma placa de vídeo (GPU) moderna. Para um material didático "para leigos", entrega ótimo custo-benefício entre velocidade e qualidade.
+| VRAM mínima necessária | nenhuma — roda na RAM do sistema |
 
 ---
 
@@ -291,65 +304,84 @@ O modelo usado fica definido em **uma única linha** dentro do arquivo `DevSecOp
 const OLLAMA_MODEL = 'gemma3:1b';
 ```
 
-Para usar outro modelo, basta baixá-lo com `ollama pull <modelo>` e trocar o nome nessa linha. Exemplos:
+Para usar outro modelo, baixe-o com `ollama pull <modelo>` e troque o nome nessa linha.
 
-| Modelo | Velocidade | Qualidade | Quando faz sentido |
-|---|---|---|---|
-| `gemma3:1b` (padrão) | ⚡⚡⚡ Rápido | Boa | Computadores modestos, sem GPU dedicada |
-| `gemma3:4b` | 🐢 Lento sem GPU | Muito boa | Só vale a pena com uma **GPU moderna** (vários GB de VRAM) |
+---
 
-> ⚠️ **Atenção:** modelos maiores precisam ler muito mais dados da memória a cada palavra gerada. Sem uma GPU moderna, eles ficam **muito lentos** (uma resposta pode levar minutos). Se a sua máquina não tem placa de vídeo dedicada e recente, mantenha o `gemma3:1b`.
+### Família Gemma 3 (disponível no Ollama)
 
-### Versão "mobile" (Gemma 3n) — para máquinas com GPU dedicada
+| Modelo | Parâmetros | Download | VRAM mínima | Quando usar |
+|---|---|---|---|---|
+| `gemma3:1b` ⭐ **padrão** | 1B | ~815 MB | nenhuma (roda na RAM) | Qualquer máquina, mesmo sem GPU |
+| `gemma3:4b` | 4B | ~3,3 GB | ~6 GB | GPU com ≥ 6 GB de VRAM |
+| `gemma3:12b` | 12B | ~8,1 GB | ~10 GB | GPU com ≥ 12 GB de VRAM |
+| `gemma3:27b` | 27B | ~17 GB | ~20 GB | GPU high-end (RTX 3090, 4090...) |
 
-> ℹ️ **Nota de nome:** não existe "Gemma 4". A família **mobile / on-device** do Google (a mesma que roda em celulares) chama-se **Gemma 3n**. A menor é a **`gemma3n:e2b`** — o `e2b` significa *"2 bilhões efetivos"* de parâmetros.
+---
 
-Ela usa uma técnica (Per-Layer Embeddings) que faz o modelo **ativar só ~2B de parâmetros por palavra gerada**, mesmo o arquivo sendo maior. Resultado: em uma **GPU dedicada com VRAM suficiente**, ela é **muito rápida** e entrega qualidade melhor que o `gemma3:1b`.
+### Família Gemma 4 (geração mais recente do Google, 2025)
 
-**Baixar e ativar:**
+O **Gemma 4** é a família mais recente do Google e traz dois tipos de modelos:
+
+- **Modelos `e` (mobile/on-device):** `e2b` e `e4b` — usam **Per-Layer Embeddings**, ativando apenas uma fração dos parâmetros por token gerado. São muito eficientes em VRAM e extremamente rápidos em GPUs modernas.
+- **Modelos densos:** `12b`, `26b`, `31b` — arquitetura tradicional com mais capacidade de raciocínio.
+
+| Modelo | Parâmetros efetivos | Download | VRAM mínima | Contexto | Quando usar |
+|---|---|---|---|---|---|
+| `gemma4:e2b` | 2,3B efetivos | ~7,2 GB | ~9 GB | 128K | **Menor Gemma 4** — GPU ≥ 8 GB (RTX 4060, 3070...) |
+| `gemma4:e4b` | 4,5B efetivos | ~9,6 GB | ~11 GB | 128K | GPU ≥ 12 GB (RTX 3080, 4070...) |
+| `gemma4:12b` | ~12B | ~7,6 GB | ~10 GB | 256K | GPU ≥ 12 GB |
+| `gemma4:26b` | 3,8B ativos (MoE) | ~18 GB | ~20 GB | 256K | GPUs high-end (RTX 3090, 4090, 5080...) |
+| `gemma4:31b` | 30,7B | ~20 GB | ~22 GB | 256K | GPUs topo de linha |
+
+> ℹ️ **O que é MoE?** O `gemma4:26b` usa **Mixture of Experts** — o modelo tem 25B de parâmetros no arquivo, mas ativa apenas ~3,8B por token gerado. Resultado: arquivo grande (18 GB de VRAM), mas geração muito rápida depois de carregado.
+
+---
+
+### Para GPUs de alto desempenho — exemplo com RTX 5090
+
+A **RTX 5090** tem **32 GB de VRAM** e banda de memória de **~1.800 GB/s** — uma das GPUs mais rápidas disponíveis. Com ela, todos os modelos Gemma 4 cabem na VRAM. A estimativa de velocidade:
+
+```
+tokens por segundo ≈ banda de memória (GB/s) ÷ dados lidos por token (GB)
+```
+
+| Modelo | Cabe na VRAM? | Velocidade estimada (RTX 5090) |
+|---|---|---|
+| `gemma4:e2b` (2,3B efetivos) | ✅ Sim (usa ~9 GB) | ~1800 ÷ 2,3 ≈ **~780 tok/s** teórico; na prática **~200–400 tok/s** — literalmente mais rápido que se lê |
+| `gemma4:e4b` (4,5B efetivos) | ✅ Sim (usa ~11 GB) | **~150–300 tok/s** |
+| `gemma4:26b` (3,8B ativos) | ✅ Sim (usa ~20 GB) | **~100–200 tok/s** com qualidade muito superior |
+| `gemma4:31b` | ✅ Sim (usa ~22 GB) | **~80–150 tok/s** |
+
+**➡️ Recomendação para RTX 5090:** comece pelo `gemma4:e2b` (menor e mais rápido) ou vá direto para o `gemma4:26b` se quiser máxima qualidade — ambos cabem com folga nos 32 GB de VRAM.
+
+**Baixar e ativar o `gemma4:e2b`:**
 
 ```powershell
-ollama pull gemma3n:e2b
+ollama pull gemma4:e2b
 ```
 
-Depois, no arquivo `DevSecOps para Leigos.html`, troque a linha do modelo para:
+No arquivo `DevSecOps para Leigos.html`, troque a linha do modelo para:
 
 ```javascript
-const OLLAMA_MODEL = 'gemma3n:e2b';
+const OLLAMA_MODEL = 'gemma4:e2b';
 ```
 
-#### Cálculo: minha GPU aguenta?
+---
 
-**1) Quanta VRAM preciso?** A regra prática é:
+### Tabela resumo: qual modelo usar conforme sua GPU?
 
-```
-VRAM necessária ≈ tamanho do modelo (Q4) + memória de contexto (~1,5 GB)
-```
+| GPU | VRAM | Modelo recomendado |
+|---|---|---|
+| GeForce GT 640 / sem GPU dedicada | 1 GB / nenhuma | `gemma3:1b` ⭐ (padrão deste projeto) |
+| GTX 1650 / RTX 3050 | 4 GB | `gemma3:1b` ou `gemma3:4b` (lento) |
+| RTX 3060 / RTX 4060 | 8–12 GB | `gemma3:4b` ou `gemma4:e2b` |
+| RTX 3070 / RTX 4070 | 8–12 GB | `gemma4:e2b` ou `gemma4:e4b` |
+| RTX 3080 / RTX 4080 | 10–16 GB | `gemma4:e4b` ou `gemma4:12b` |
+| RTX 3090 / RTX 4090 | 24 GB | `gemma4:26b` |
+| **RTX 5090** | **32 GB** | **`gemma4:e2b`** (velocidade) ou **`gemma4:26b`** (qualidade) |
 
-A `gemma3n:e2b` ocupa **~5,6 GB** quantizada (Q4). Logo:
-
-```
-5,6 GB (modelo) + 1,5 GB (contexto) ≈ 7,1 GB de VRAM
-```
-
-➡️ **Recomendado: GPU com 8 GB de VRAM ou mais** para rodar 100% na placa (ex.: RTX 3060 12 GB, RTX 4060 8 GB, RTX 3070). Com menos VRAM, parte cai na CPU e fica lento.
-
-**2) Quão rápido vai ser?** A geração é limitada pela **banda de memória**:
-
-```
-tokens por segundo ≈ banda de memória (GB/s) ÷ dados lidos por palavra (GB)
-```
-
-Como a `gemma3n:e2b` lê só **~2 GB efetivos por palavra**, numa GPU dedicada o ganho é enorme:
-
-| GPU | Banda de memória | Cabe na VRAM? | Velocidade estimada |
-|---|---|---|---|
-| RTX 3060 12 GB | ~360 GB/s | ✅ Sim | ~360 ÷ 2 ≈ **180 tok/s** (teórico); na prática **~50-80 tok/s** — instantâneo |
-| RTX 4060 8 GB | ~270 GB/s | ✅ Sim (no limite) | **~40-60 tok/s** |
-| GTX 1650 4 GB | ~190 GB/s | ❌ Não (precisa ~7 GB) | parte na CPU → lento |
-| GeForce GT 640 1 GB (máquina atual) | ~28 GB/s | ❌ Não | inviável — por isso usamos o `gemma3:1b` |
-
-> 📌 **Resumo do cálculo:** para a `gemma3n:e2b` valer a pena, a GPU precisa de **≥ 8 GB de VRAM**. Tendo isso, ela roda muito rápido (dezenas de tokens/s) e com qualidade superior ao `gemma3:1b`. Em GPUs pequenas (como a de 1 GB desta máquina), ela **não cabe** e fica lenta — daí o padrão do projeto ser o modelo leve.
+> ⚠️ **Máquinas sem GPU dedicada ou com menos de 4 GB de VRAM:** mantenha o `gemma3:1b`. Modelos maiores vão rodar pela CPU e podem levar minutos por resposta.
 
 ---
 
