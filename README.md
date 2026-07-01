@@ -1,5 +1,7 @@
 # DevSecOps para Leigos
 
+![Preview do projeto no GitHub](docs/screenshot.png)
+
 Apresentação interativa sobre DevSecOps com **acessibilidade completa** e um **Mentor de IA rodando 100% no seu computador** — sem internet, sem conta, sem custo.
 
 ---
